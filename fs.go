@@ -28,7 +28,7 @@ type FS = fs.FS
 // Paths containing other characters such as backslash and colon
 // are accepted as valid, but those characters must never be
 // interpreted by an FS implementation as path element separators.
-var ValidPath = fs.ValidPath
+func ValidPath(name string) bool { return fs.ValidPath(name) }
 
 // A File provides access to a single file.
 // The File interface is the minimum implementation required of the file.
@@ -113,7 +113,7 @@ type GlobFS = fs.GlobFS
 // If fs implements GlobFS, Glob calls fs.Glob.
 // Otherwise, Glob uses ReadDir to traverse the directory tree
 // and look for matches for the pattern.
-var Glob = fs.Glob
+func Glob(fsys fs.FS, pattern string) (matches []string, err error) { return fs.Glob(fsys, pattern) }
 
 // ReadDirFS is the interface implemented by a file system
 // that provides an optimized implementation of ReadDir.
@@ -125,7 +125,7 @@ type ReadDirFS = fs.ReadDirFS
 // If fs implements ReadDirFS, ReadDir calls fs.ReadDir.
 // Otherwise ReadDir calls fs.Open and uses ReadDir and Close
 // on the returned file.
-var ReadDir = fs.ReadDir
+func ReadDir(fsys fs.FS, name string) ([]fs.DirEntry, error) { return fs.ReadDir(fsys, name) }
 
 // ReadFileFS is the interface implemented by a file system
 // that provides an optimized implementation of ReadFile.
@@ -139,7 +139,7 @@ type ReadFileFS = fs.ReadFileFS
 // If fs implements ReadFileFS, ReadFile calls fs.ReadFile.
 // Otherwise ReadFile calls fs.Open and uses Read and Close
 // on the returned file.
-var ReadFile = fs.ReadFile
+func ReadFile(fsys fs.FS, name string) ([]byte, error) { return fs.ReadFile(fsys, name) }
 
 // A StatFS is a file system with a Stat method.
 type StatFS = fs.StatFS
@@ -148,7 +148,7 @@ type StatFS = fs.StatFS
 //
 // If fs implements StatFS, Stat calls fs.Stat.
 // Otherwise, Stat opens the file to stat it.
-var Stat = fs.Stat
+func Stat(fsys fs.FS, name string) (fs.FileInfo, error) { return fs.Stat(fsys, name) }
 
 // A SubFS is a file system with a Sub method.
 type SubFS = fs.SubFS
@@ -217,4 +217,4 @@ type WalkDirFunc = fs.WalkDirFunc
 //
 // WalkDir does not follow symbolic links found in directories,
 // but if root itself is a symbolic link, its target will be walked.
-var WalkDir = fs.WalkDir
+func WalkDir(fsys fs.FS, root string, fn fs.WalkDirFunc) error { return fs.WalkDir(fsys, root, fn) }
