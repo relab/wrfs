@@ -54,9 +54,7 @@ func RemoveAll(fsys FS, path string) error {
 			if err = RemoveAll(fsys, filepath.Join(path, fi.Name())); err != nil {
 				return err
 			}
-		}
-
-		if err = Remove(fsys, filepath.Join(path, fi.Name())); err != nil {
+		} else if err = Remove(fsys, filepath.Join(path, fi.Name())); err != nil {
 			return err
 		}
 	}
