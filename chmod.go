@@ -2,7 +2,7 @@ package wrfs
 
 // Chmod is a file with a Chmod method.
 type ChmodFile interface {
-	FS
+	File
 
 	// Chmod changes the mode of the file to mode.
 	Chmod(mode FileMode) error

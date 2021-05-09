@@ -140,7 +140,7 @@ func (fsys MapFS) OpenFile(name string, flag int, perm fs.FileMode) (fs.File, er
 			file = &MapFile{
 				Mode:    perm,
 				ModTime: time.Now(),
-				Sys:     MapFileSys{},
+				Sys:     &MapFileSys{},
 			}
 			fsys[name] = file
 		} else if flag&os.O_EXCL == 1 {
@@ -236,6 +236,14 @@ func (fsys MapFS) Chtimes(name string, atime, mtime time.Time) error {
 	return fs.Chtimes(fsOnly{fsys}, name, atime, mtime)
 }
 
+type mkdirOnly struct {
+	fs.MkdirFS
+}
+
+func (fsys MapFS) MkdirAll(path string, perm fs.FileMode) error {
+	return fs.MkdirAll(mkdirOnly{fsys}, path, perm)
+}
+
 type noSub struct {
 	MapFS
 }
@@ -298,7 +306,7 @@ func (f *openMapFile) Write(p []byte) (n int, err error) {
 }
 
 func (f *openMapFile) Chown(uid, gid int) error {
-	sys, ok := f.f.Sys.(MapFileSys)
+	sys, ok := f.f.Sys.(*MapFileSys)
 	if !ok {
 		return fs.ErrNotSupported
 	}
@@ -313,7 +321,7 @@ func (f *openMapFile) Chmod(mode fs.FileMode) error {
 }
 
 func (f *openMapFile) Chtimes(atime, mtime time.Time) error {
-	sys, ok := f.f.Sys.(MapFileSys)
+	sys, ok := f.f.Sys.(*MapFileSys)
 	if !ok {
 		return fs.ErrNotSupported
 	}
