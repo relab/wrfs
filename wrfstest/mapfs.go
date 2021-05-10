@@ -163,6 +163,10 @@ func (fsys MapFS) OpenFile(name string, flag int, perm fs.FileMode) (fs.File, er
 		offset: 0,
 	}
 
+	if flag&os.O_APPEND == 1 {
+		ofile.offset = ofile.Size()
+	}
+
 	// TODO make file read-write, read-only or write-only
 	return ofile, nil
 }
