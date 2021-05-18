@@ -24,11 +24,11 @@ import (
 // other directories. That is, os.DirFS is not a general substitute for a
 // chroot-style security mechanism, and Sub does not change that fact.
 func Sub(fsys FS, dir string) (FS, error) {
+	if dir == "" || dir == "." {
+		return fsys, nil
+	}
 	if !ValidPath(dir) {
 		return nil, &PathError{Op: "sub", Path: dir, Err: errors.New("invalid name")}
-	}
-	if dir == "." {
-		return fsys, nil
 	}
 	if fsys, ok := fsys.(SubFS); ok {
 		return fsys.Sub(dir)
