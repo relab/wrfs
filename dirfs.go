@@ -2,7 +2,7 @@ package wrfs
 
 import (
 	"os"
-	"runtime"
+	"time"
 )
 
 // DirFS returns a file system (an fs.FS) for the tree of files rooted at the directory dir.
@@ -14,106 +14,79 @@ import (
 // os.Open does. DirFS is therefore not a general substitute for a chroot-style security
 // mechanism when the directory tree contains arbitrary content.
 func DirFS(dir string) FS {
-	return dirFS(dir)
+	return &subFS{fsys: hostFS{}, dir: dir}
 }
 
-func containsAny(s, chars string) bool {
-	for i := 0; i < len(s); i++ {
-		for j := 0; j < len(chars); j++ {
-			if s[i] == chars[j] {
-				return true
-			}
-		}
-	}
-	return false
+type hostFS struct{}
+
+func (hostFS) Chtimes(name string, atime, mtime time.Time) error {
+	return os.Chtimes(name, atime, mtime)
 }
 
-type dirFS string
-
-func (dir dirFS) validPath(name string) (string, error) {
-	// On Windows, we will not allow back slashes or colons.
-	if !ValidPath(name) || runtime.GOOS == "windows" && containsAny(name, `\:`) {
-		return "", &PathError{Op: "open", Path: name, Err: ErrInvalid}
-	}
-	return string(dir) + "/" + name, nil
+func (hostFS) Mkdir(path string, perm FileMode) error {
+	return os.Mkdir(path, perm)
 }
 
-func (dir dirFS) Mkdir(path string, perm FileMode) error {
-	full, err := dir.validPath(path)
-	if err != nil {
-		return err
-	}
-	return os.Mkdir(full, perm)
-}
-
-func (dir dirFS) Open(name string) (File, error) {
-	full, err := dir.validPath(name)
-	if err != nil {
-		return nil, err
-	}
-	f, err := os.Open(full)
+func (hostFS) Open(name string) (File, error) {
+	f, err := os.Open(name)
 	if err != nil {
 		return nil, err // nil fs.File
 	}
 	return f, nil
 }
 
-func (dir dirFS) OpenFile(name string, flag int, perm FileMode) (File, error) {
-	full, err := dir.validPath(name)
-	if err != nil {
-		return nil, err
-	}
-	file, err := os.OpenFile(full, flag, perm)
+func (hostFS) OpenFile(name string, flag int, perm FileMode) (File, error) {
+	file, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
 	}
 	return file, nil
 }
 
-func (dir dirFS) Remove(name string) error {
-	full, err := dir.validPath(name)
+func (hostFS) Stat(name string) (FileInfo, error) {
+	fi, err := os.Stat(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return os.Remove(full)
+	return fi, nil
 }
 
-func (dir dirFS) RemoveAll(path string) error {
-	full, err := dir.validPath(path)
+func (hostFS) Lstat(name string) (FileInfo, error) {
+	fi, err := os.Lstat(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return os.RemoveAll(full)
+	return fi, nil
 }
 
-func (dir dirFS) Rename(oldpath, newpath string) error {
-	oldfull, err := dir.validPath(oldpath)
+func (hostFS) Readlink(name string) (string, error) {
+	link, err := os.Readlink(name)
 	if err != nil {
-		return err
+		return "", err
 	}
-	newfull, err := dir.validPath(newpath)
-	if err != nil {
-		return err
-	}
-	return os.Rename(oldfull, newfull)
+	return link, nil
 }
 
-func (dir dirFS) Symlink(oldname, newname string) error {
-	oldfull, err := dir.validPath(oldname)
-	if err != nil {
-		return err
-	}
-	newfull, err := dir.validPath(newname)
-	if err != nil {
-		return err
-	}
-	return os.Symlink(oldfull, newfull)
+func (hostFS) Remove(name string) error {
+	return os.Remove(name)
 }
 
-func (dir dirFS) Truncate(name string, size int64) error {
-	full, err := dir.validPath(name)
-	if err != nil {
-		return err
-	}
-	return os.Truncate(full, size)
+func (hostFS) RemoveAll(path string) error {
+	return os.RemoveAll(path)
+}
+
+func (hostFS) Rename(oldpath, newpath string) error {
+	return os.Rename(oldpath, newpath)
+}
+
+func (hostFS) Symlink(oldname, newname string) error {
+	return os.Symlink(oldname, newname)
+}
+
+func (hostFS) Link(oldname, newname string) error {
+	return os.Link(oldname, newname)
+}
+
+func (hostFS) Truncate(name string, size int64) error {
+	return os.Truncate(name, size)
 }

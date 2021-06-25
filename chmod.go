@@ -19,7 +19,7 @@ type ChmodFS interface {
 
 // Chmod changes the mode of the named file to mode.
 // If the file is a symbolic link, it changes the mode of the link's target.
-func Chmod(fsys FS, name string, mode FileMode) error {
+func Chmod(fsys FS, name string, mode FileMode) (err error) {
 	if fsys, ok := fsys.(ChmodFS); ok {
 		return fsys.Chmod(name, mode)
 	}
@@ -29,7 +29,7 @@ func Chmod(fsys FS, name string, mode FileMode) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer safeClose(file, &err)
 
 	if file, ok := file.(ChmodFile); ok {
 		return file.Chmod(mode)
