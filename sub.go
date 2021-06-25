@@ -203,6 +203,10 @@ func (f *subFS) Rename(oldname, newname string) error {
 	return f.linkAction(oldname, newname, "rename", Rename)
 }
 
+func (f *subFS) SameFile(fi1, fi2 FileInfo) bool {
+	return SameFile(f.fsys, fi1, fi2)
+}
+
 func (f *subFS) Symlink(oldname, newname string) error {
 	return f.linkAction(oldname, newname, "symlink", Symlink)
 }

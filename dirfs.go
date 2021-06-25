@@ -19,6 +19,14 @@ func DirFS(dir string) FS {
 
 type hostFS struct{}
 
+func (hostFS) Chmod(name string, mode FileMode) error {
+	return os.Chmod(name, mode)
+}
+
+func (hostFS) Chown(name string, uid, gid int) error {
+	return os.Chown(name, uid, gid)
+}
+
 func (hostFS) Chtimes(name string, atime, mtime time.Time) error {
 	return os.Chtimes(name, atime, mtime)
 }
@@ -77,6 +85,10 @@ func (hostFS) RemoveAll(path string) error {
 
 func (hostFS) Rename(oldpath, newpath string) error {
 	return os.Rename(oldpath, newpath)
+}
+
+func (hostFS) SameFile(fi1, fi2 FileInfo) bool {
+	return os.SameFile(fi1, fi2)
 }
 
 func (hostFS) Symlink(oldname, newname string) error {

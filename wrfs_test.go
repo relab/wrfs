@@ -13,14 +13,20 @@ import (
 
 func TestChmod(t *testing.T) {
 	fsys := getFS(t)
-	fileName := "TestChmod"
-	want := FileMode(0750)
-	newFile(t, fsys, fileName)
 
-	err := Chmod(fsys, fileName, want)
-	check(t, err)
+	testCase := func(fsys FS) {
+		fileName := "TestChmod"
+		want := FileMode(0750)
+		newFile(t, fsys, fileName)
 
-	checkMode(t, fsys, fileName, want)
+		err := Chmod(fsys, fileName, want)
+		check(t, err)
+
+		checkMode(t, fsys, fileName, want)
+	}
+
+	t.Run("", func(t *testing.T) { testCase(fsys) })
+	t.Run("OpenFileOnly", func(t *testing.T) { testCase(openFileOnly{fsys.(OpenFileFS)}) })
 }
 
 func TestChtimes(t *testing.T) {
@@ -103,6 +109,16 @@ func TestRemoveAll(t *testing.T) {
 	})
 }
 
+type removeOnlyFS interface {
+	RemoveFS
+	MkdirFS
+	OpenFileFS
+}
+
+type removeOnly struct {
+	removeOnlyFS
+}
+
 func TestRename(t *testing.T) {
 	fsys := getFS(t)
 	oldName := "TestRename"
@@ -142,14 +158,52 @@ func TestSymlink(t *testing.T) {
 	}
 }
 
-type removeOnlyFS interface {
-	RemoveFS
-	MkdirFS
-	OpenFileFS
+func TestLink(t *testing.T) {
+	fsys := getFS(t)
+	src := "TestSymlink"
+	dest := "TestSymlink2"
+	newFile(t, fsys, src)
+
+	fi1, err := Stat(fsys, src)
+	check(t, err)
+
+	err = Link(fsys, src, dest)
+	check(t, err)
+
+	fi2, err := Stat(fsys, dest)
+	check(t, err)
+
+	if !SameFile(fsys, fi1, fi2) {
+		t.Error("SameFile returned false")
+	}
 }
 
-type removeOnly struct {
-	removeOnlyFS
+func TestTruncate(t *testing.T) {
+	fsys := getFS(t)
+
+	testCase := func(fsys FS) {
+		file := "TestTruncate"
+		size := int64(100)
+
+		newFile(t, fsys, file)
+
+		err := Truncate(fsys, file, size)
+		check(t, err)
+
+		fi, err := Stat(fsys, file)
+		check(t, err)
+
+		if fi.Size() < size {
+			t.Error("File size was not increased")
+		}
+	}
+
+	t.Run("", func(t *testing.T) { testCase(fsys) })
+	t.Run("OpenFileOnly", func(t *testing.T) { testCase(openFileOnly{fsys.(OpenFileFS)}) })
+}
+
+type openFileOnly struct {
+	OpenFileFS
 }
 
 func getFS(t *testing.T) FS {
