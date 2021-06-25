@@ -22,11 +22,12 @@ type ChtimesFS interface {
 
 // Chtimes changes the access and modification times of the named file,
 // similar to the Unix utime() or utimes() functions.
-func Chtimes(fsys FS, name string, atime time.Time, mtime time.Time) error {
+func Chtimes(fsys FS, name string, atime time.Time, mtime time.Time) (err error) {
 	if fsys, ok := fsys.(ChtimesFS); ok {
 		return fsys.Chtimes(name, atime, mtime)
 	}
 	file, err := fsys.Open(name)
+	defer safeClose(file, &err)
 	if err != nil {
 		return err
 	}

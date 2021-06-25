@@ -58,5 +58,6 @@ func RemoveAll(fsys FS, path string) error {
 			return err
 		}
 	}
-	return nil
+
+	return Remove(fsys, path)
 }

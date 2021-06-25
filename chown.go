@@ -22,7 +22,7 @@ type ChownFS interface {
 // Chown changes the numeric uid and gid of the named file.
 // If the file is a symbolic link, it changes the uid and gid of the link's target.
 // A uid or gid of -1 means to not change that value.
-func Chown(fsys FS, name string, uid, gid int) error {
+func Chown(fsys FS, name string, uid, gid int) (err error) {
 	if fsys, ok := fsys.(ChownFS); ok {
 		return fsys.Chown(name, uid, gid)
 	}
@@ -32,11 +32,27 @@ func Chown(fsys FS, name string, uid, gid int) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer safeClose(file, &err)
 
 	if file, ok := file.(ChownFile); ok {
 		return file.Chown(uid, gid)
 	}
 
+	return &PathError{Op: "chown", Path: name, Err: ErrNotSupported}
+}
+
+// LchownFS is a file system that supports the Lchown function.
+type LchownFS interface {
+	// Lchown changes the numeric uid and gid of the named file.
+	// If the file is a symbolic link, it changes the uid and gid of the link itself.
+	Lchown(name string, uid, gid int) error
+}
+
+// Lchown changes the numeric uid and gid of the named file.
+// If the file is a symbolic link, it changes the uid and gid of the link itself.
+func Lchown(fsys FS, name string, uid, gid int) (err error) {
+	if fsys, ok := fsys.(LchownFS); ok {
+		return fsys.Lchown(name, uid, gid)
+	}
 	return &PathError{Op: "chown", Path: name, Err: ErrNotSupported}
 }

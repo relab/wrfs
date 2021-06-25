@@ -7,6 +7,7 @@ package wrfs
 import (
 	"errors"
 	"path"
+	"time"
 )
 
 // Sub returns an FS corresponding to the subtree rooted at fsys's dir.
@@ -79,6 +80,24 @@ func (f *subFS) Open(name string) (File, error) {
 	return file, f.fixErr(err)
 }
 
+func (f *subFS) Stat(name string) (FileInfo, error) {
+	full, err := f.fullName("stat", name)
+	if err != nil {
+		return nil, err
+	}
+	fi, err := Stat(f.fsys, full)
+	return fi, f.fixErr(err)
+}
+
+func (f *subFS) Lstat(name string) (FileInfo, error) {
+	full, err := f.fullName("lstat", name)
+	if err != nil {
+		return nil, err
+	}
+	fi, err := Lstat(f.fsys, full)
+	return fi, f.fixErr(err)
+}
+
 func (f *subFS) ReadDir(name string) ([]DirEntry, error) {
 	full, err := f.fullName("read", name)
 	if err != nil {
@@ -128,49 +147,102 @@ func (f *subFS) OpenFile(name string, flag int, perm FileMode) (File, error) {
 }
 
 func (f *subFS) Chmod(name string, mode FileMode) error {
-	full, err := f.fullName("chmod", name)
-	if err != nil {
-		return err
-	}
-	return f.fixErr(Chmod(f.fsys, full, mode))
+	return f.permAction(name, mode, "chmod", Chmod)
 }
 
 func (f *subFS) Chown(name string, uid, gid int) error {
-	full, err := f.fullName("chown", name)
-	if err != nil {
-		return err
-	}
-	return f.fixErr(Chown(f.fsys, full, uid, gid))
+	return f.pathAction(name, "chown", func(fsys FS, path string) error {
+		return Chown(fsys, path, uid, gid)
+	})
+}
+
+func (f *subFS) Lchown(name string, uid, gid int) error {
+	return f.pathAction(name, "lchown", func(fsys FS, path string) error {
+		return Lchown(fsys, path, uid, gid)
+	})
+}
+
+func (f *subFS) Chtimes(name string, atime, mtime time.Time) error {
+	return f.pathAction(name, "chtimes", func(fsys FS, path string) error {
+		return Chtimes(fsys, path, atime, mtime)
+	})
 }
 
 func (f *subFS) Mkdir(name string, perm FileMode) error {
-	full, err := f.fullName("mkdir", name)
-	if err != nil {
-		return err
-	}
-	return f.fixErr(Mkdir(f.fsys, full, perm))
+	return f.permAction(name, perm, "mkdir", Mkdir)
 }
 
 func (f *subFS) MkdirAll(path string, perm FileMode) error {
-	full, err := f.fullName("mkdir", path)
+	return f.permAction(path, perm, "mkdir", MkdirAll)
+}
+
+func (f *subFS) Readlink(name string) (string, error) {
+	full, err := f.fullName("readlink", name)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return f.fixErr(MkdirAll(f.fsys, full, perm))
+	link, err := Readlink(f.fsys, full)
+	if err != nil {
+		return "", err
+	}
+	if link, ok := f.shorten(link); ok {
+		return link, nil
+	}
+	return link, nil
 }
 
 func (f *subFS) Remove(name string) error {
-	full, err := f.fullName("remove", name)
-	if err != nil {
-		return err
-	}
-	return f.fixErr(Remove(f.fsys, full))
+	return f.pathAction(name, "remove", Remove)
 }
 
 func (f *subFS) RemoveAll(name string) error {
-	full, err := f.fullName("remove", name)
+	return f.pathAction(name, "remove", RemoveAll)
+}
+
+func (f *subFS) Rename(oldname, newname string) error {
+	return f.linkAction(oldname, newname, "rename", Rename)
+}
+
+func (f *subFS) SameFile(fi1, fi2 FileInfo) bool {
+	return SameFile(f.fsys, fi1, fi2)
+}
+
+func (f *subFS) Symlink(oldname, newname string) error {
+	return f.linkAction(oldname, newname, "symlink", Symlink)
+}
+
+func (f *subFS) Link(oldname, newname string) error {
+	return f.linkAction(oldname, newname, "link", Link)
+}
+
+func (f *subFS) Truncate(name string, size int64) error {
+	return f.pathAction(name, "truncate", func(fsys FS, path string) error {
+		return Truncate(fsys, path, size)
+	})
+}
+
+func (f *subFS) pathAction(path string, name string, action func(fsys FS, path string) error) error {
+	full, err := f.fullName(name, path)
 	if err != nil {
 		return err
 	}
-	return f.fixErr(RemoveAll(f.fsys, full))
+	return f.fixErr(action(f.fsys, full))
+}
+
+func (f *subFS) permAction(path string, perm FileMode, name string, action func(fsys FS, path string, perm FileMode) error) error {
+	return f.pathAction(path, name, func(fsys FS, path string) error {
+		return action(fsys, path, perm)
+	})
+}
+
+func (f *subFS) linkAction(oldPath, newPath string, name string, action func(fsys FS, src string, dest string) error) error {
+	oldFull, err := f.fullName(name, oldPath)
+	if err != nil {
+		return err
+	}
+	newFull, err := f.fullName(name, newPath)
+	if err != nil {
+		return err
+	}
+	return f.fixErr(action(f.fsys, oldFull, newFull))
 }
