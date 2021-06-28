@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/Raytar/wrfs"
+	. "github.com/relab/wrfs"
 )
 
 func TestChmod(t *testing.T) {
