@@ -11,5 +11,5 @@ func Readlink(fsys FS, name string) (string, error) {
 	if fsys, ok := fsys.(ReadlinkFS); ok {
 		return fsys.Readlink(name)
 	}
-	return "", &PathError{Op: "readlink", Path: name, Err: ErrNotSupported}
+	return "", &PathError{Op: "readlink", Path: name, Err: ErrUnsupported}
 }

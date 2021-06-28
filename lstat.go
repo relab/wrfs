@@ -15,5 +15,5 @@ func Lstat(fsys FS, name string) (info FileInfo, err error) {
 	if fsys, ok := (fsys.(LstatFS)); ok {
 		return fsys.Lstat(name)
 	}
-	return nil, &PathError{Op: "lstat", Path: name, Err: ErrNotSupported}
+	return nil, &PathError{Op: "lstat", Path: name, Err: ErrUnsupported}
 }

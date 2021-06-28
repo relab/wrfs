@@ -34,5 +34,5 @@ func Chtimes(fsys FS, name string, atime time.Time, mtime time.Time) (err error)
 	if file, ok := file.(ChtimesFile); ok {
 		return file.Chtimes(atime, mtime)
 	}
-	return &PathError{Op: "chtimes", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "chtimes", Path: name, Err: ErrUnsupported}
 }

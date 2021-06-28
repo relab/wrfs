@@ -36,5 +36,5 @@ func Truncate(fsys FS, name string, size int64) (err error) {
 
 	// We could try to manually truncate the file if the fs supports OpenFile,
 	// but that would be very inefficient.
-	return &PathError{Op: "truncate", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "truncate", Path: name, Err: ErrUnsupported}
 }

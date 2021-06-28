@@ -18,7 +18,7 @@ func Mkdir(fsys FS, name string, perm FileMode) error {
 	if fsys, ok := fsys.(MkdirFS); ok {
 		return fsys.Mkdir(name, perm)
 	}
-	return &PathError{Op: "mkdir", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "mkdir", Path: name, Err: ErrUnsupported}
 }
 
 type MkdirAllFS interface {
@@ -42,7 +42,7 @@ func MkdirAll(fsys FS, path string, perm FileMode) error {
 
 	fsys, ok := fsys.(MkdirFS)
 	if !ok {
-		return &PathError{Op: "mkdir", Path: path, Err: ErrNotSupported}
+		return &PathError{Op: "mkdir", Path: path, Err: ErrUnsupported}
 	}
 
 	// Based on os.MkdirAll

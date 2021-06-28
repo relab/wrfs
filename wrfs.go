@@ -3,7 +3,14 @@
 // functions defined by io/fs.
 package wrfs
 
-import "io"
+import (
+	"errors"
+	"io"
+)
+
+// TODO: replace this with errors.ErrUnsupported: https://github.com/golang/go/issues/41198
+
+var ErrUnsupported = errors.New("unsupported operation")
 
 // safeClose closes an io.Closer and stores the error in errPtr
 func safeClose(closer io.Closer, errPtr *error) {

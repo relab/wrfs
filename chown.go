@@ -38,7 +38,7 @@ func Chown(fsys FS, name string, uid, gid int) (err error) {
 		return file.Chown(uid, gid)
 	}
 
-	return &PathError{Op: "chown", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "chown", Path: name, Err: ErrUnsupported}
 }
 
 // LchownFS is a file system that supports the Lchown function.
@@ -54,5 +54,5 @@ func Lchown(fsys FS, name string, uid, gid int) (err error) {
 	if fsys, ok := fsys.(LchownFS); ok {
 		return fsys.Lchown(name, uid, gid)
 	}
-	return &PathError{Op: "chown", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "chown", Path: name, Err: ErrUnsupported}
 }

@@ -35,5 +35,5 @@ func Chmod(fsys FS, name string, mode FileMode) (err error) {
 		return file.Chmod(mode)
 	}
 
-	return &PathError{Op: "chmod", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "chmod", Path: name, Err: ErrUnsupported}
 }

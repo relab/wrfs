@@ -1,12 +1,9 @@
 package wrfs
 
 import (
-	"errors"
 	"io"
 	"os"
 )
-
-var ErrNotSupported = errors.New("operation not supported")
 
 // WriteFile is a file that can be written to.
 type WriteFile interface {
@@ -21,7 +18,7 @@ func Write(file File, p []byte) (n int, err error) {
 	if file, ok := file.(io.Writer); ok {
 		return file.Write(p)
 	}
-	return 0, ErrNotSupported
+	return 0, ErrUnsupported
 }
 
 // Seek sets the offset for the next Read or Write on file to offset,
@@ -32,7 +29,7 @@ func Seek(file File, offset int64, whence int) (int64, error) {
 	if file, ok := file.(io.Seeker); ok {
 		return file.Seek(offset, whence)
 	}
-	return 0, ErrNotSupported
+	return 0, ErrUnsupported
 }
 
 // OpenFileFS is a file system that supports the OpenFile function.
@@ -55,7 +52,7 @@ func OpenFile(fsys FS, name string, flag int, perm FileMode) (File, error) {
 	if flag == os.O_RDONLY {
 		return fsys.Open(name)
 	}
-	return nil, &PathError{Op: "open", Path: name, Err: ErrNotSupported}
+	return nil, &PathError{Op: "open", Path: name, Err: ErrUnsupported}
 }
 
 // Create creates or truncates the named file. If the file already exists,

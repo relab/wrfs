@@ -15,5 +15,5 @@ func Symlink(fsys FS, oldname, newname string) error {
 	if fsys, ok := fsys.(SymlinkFS); ok {
 		return fsys.Symlink(oldname, newname)
 	}
-	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrNotSupported}
+	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrUnsupported}
 }

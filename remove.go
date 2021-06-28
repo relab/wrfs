@@ -17,7 +17,7 @@ func Remove(fsys FS, name string) error {
 	if fsys, ok := fsys.(RemoveFS); ok {
 		return fsys.Remove(name)
 	}
-	return &PathError{Op: "remove", Path: name, Err: ErrNotSupported}
+	return &PathError{Op: "remove", Path: name, Err: ErrUnsupported}
 }
 
 // RemoveAllFS is a file system that supports the RemoveAll function.

@@ -13,5 +13,5 @@ func Link(fsys FS, oldname, newname string) error {
 	if fsys, ok := fsys.(LinkFS); ok {
 		return fsys.Link(oldname, newname)
 	}
-	return &os.LinkError{Op: "link", Old: oldname, New: newname, Err: ErrNotSupported}
+	return &os.LinkError{Op: "link", Old: oldname, New: newname, Err: ErrUnsupported}
 }
