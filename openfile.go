@@ -61,5 +61,8 @@ func OpenFile(fsys FS, name string, flag int, perm FileMode) (File, error) {
 // be used for I/O; the associated file descriptor has mode O_RDWR.
 func Create(fsys FS, name string) (WriteFile, error) {
 	file, err := OpenFile(fsys, name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return nil, err
+	}
 	return file.(WriteFile), err
 }
